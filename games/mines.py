@@ -1,7 +1,7 @@
 # --- FILE: games/mines.py ---
 import random
 
-# 1. TRIGGER (Bot isi se game pehchanega)
+# 1. TRIGGER
 TRIGGER = "!mines"
 
 def render_grid(bombs, eaten, reveal=False, exploded=None):
@@ -13,11 +13,10 @@ def render_grid(bombs, eaten, reveal=False, exploded=None):
         elif reveal and i in bombs: txt += "💣 "
         elif i in eaten: txt += "🥔 "
         else: txt += icons[i-1] + " "
-        
         if i % 3 == 0 and i != 9: txt += "\n"
     return txt
 
-# 2. HANDLE FUNCTION (Isme ab 10 Arguments hain - Bilkul skip mat karna)
+# 2. HANDLE FUNCTION (Isme 10 Arguments hain - Bilkul skip mat karna)
 def handle(user, msg, state, send_text, send_raw, db_set_score, db_get_score, db_get_top, global_data, add_log):
     
     msg_clean = msg.lower().strip()
@@ -31,11 +30,12 @@ def handle(user, msg, state, send_text, send_raw, db_set_score, db_get_score, db
             "eaten": []
         })
         
-        # Dashboard par log bhejo (Naya Feature)
-        add_log(f"New Mines Game started by {user}")
+        # Dashboard par log bhejo
+        add_log(f"Game Started: {user}")
         
         grid = render_grid(state["bombs"], [])
-        send_text(room="", text=f"💣 MINES STARTED! @{user}\nGoal: Eat 4 Chips 🥔 | Avoid 2 Bombs 💣\nType: !eat <1-9>\n\n{grid}")
+        # Note: yahan sirf text bhejna hai, room ID app.py sambhal lega
+        send_text(f"💣 MINES STARTED! @{user}\nGoal: Eat 4 Chips 🥔 | Avoid 2 Bombs 💣\nType: !eat <1-9>\n\n{grid}")
         return state
 
     # --- B. GAMEPLAY LOGIC (!eat) ---
@@ -50,30 +50,22 @@ def handle(user, msg, state, send_text, send_raw, db_set_score, db_get_score, db
         if num < 1 or num > 9 or num in state["eaten"]:
             return state
 
-        # BOMB CHECK
         if num in state["bombs"]:
-            state["active"] = False # Session Close
+            state["active"] = False 
             grid = render_grid(state["bombs"], state["eaten"], reveal=True, exploded=num)
-            send_text(room="", text=f"💥 BOOM! @{user} hit a bomb at #{num}!\n💀 GAME OVER.\n\n{grid}")
-            add_log(f"Game Over: {user} hit a bomb.")
-            
+            send_text(f"💥 BOOM! @{user} hit a bomb at #{num}!\n💀 GAME OVER.\n\n{grid}")
+            add_log(f"Game Over: {user} lost.")
         else:
-            # SAFE CHIP
             state["eaten"].append(num)
-            
-            # WIN CHECK (4 Chips)
             if len(state["eaten"]) == 4:
                 state["active"] = False
                 prize = 50
-                
-                # Database mein score save karo (Universal Tool)
-                db_set_score(user, prize)
-                
+                db_set_score(user, prize) # Neon DB Update
                 grid = render_grid(state["bombs"], state["eaten"], reveal=True)
-                send_text(room="", text=f"🎉 WINNER! @{user} ate 4 chips!\n💰 +{prize} Points added to Neon DB!\n\n{grid}")
-                add_log(f"Victory: {user} won {prize} pts")
+                send_text(f"🎉 WINNER! @{user} ate 4 chips!\n💰 +{prize} Points added!\n\n{grid}")
+                add_log(f"Victory: {user} won!")
             else:
                 grid = render_grid(state["bombs"], state["eaten"])
-                send_text(room="", text=f"🥔 SAFE! ({len(state['eaten'])}/4)\n{grid}")
+                send_text(f"🥔 SAFE! ({len(state['eaten'])}/4)\n{grid}")
 
     return state
