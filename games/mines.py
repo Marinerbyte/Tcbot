@@ -1,11 +1,11 @@
 # --- FILE: games/mines.py ---
 import random
 
-# Ye Trigger batayega ki kab game shuru karna hai
+# 1. TRIGGER (Bot isi se game pehchanega)
 TRIGGER = "!mines"
 
 def render_grid(bombs, eaten, reveal=False, exploded=None):
-    """Grid banane ka logic (Standard Design)"""
+    """Grid banane ka logic"""
     icons = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣"]
     txt = ""
     for i in range(1, 10):
@@ -17,51 +17,63 @@ def render_grid(bombs, eaten, reveal=False, exploded=None):
         if i % 3 == 0 and i != 9: txt += "\n"
     return txt
 
-def handle(user, msg, state, send_func, db_func):
-    """Main Game Handler - app.py ise call karega"""
-    msg = msg.lower().strip()
+# 2. HANDLE FUNCTION (Isme ab 10 Arguments hain - Bilkul skip mat karna)
+def handle(user, msg, state, send_text, send_raw, db_set_score, db_get_score, db_get_top, global_data, add_log):
+    
+    msg_clean = msg.lower().strip()
 
-    # 1. GAME START
-    if msg == TRIGGER:
-        state["active"] = True
-        state["game_type"] = TRIGGER
-        state["bombs"] = random.sample(range(1, 10), 2) # 2 Bombs
-        state["eaten"] = []
+    # --- A. GAME START LOGIC ---
+    if msg_clean == TRIGGER:
+        state.update({
+            "active": True, 
+            "game_type": TRIGGER,
+            "bombs": random.sample(range(1, 10), 2), 
+            "eaten": []
+        })
+        
+        # Dashboard par log bhejo (Naya Feature)
+        add_log(f"New Mines Game started by {user}")
         
         grid = render_grid(state["bombs"], [])
-        send_func(f"💣 MINES STARTED! @{user}\nAvoid 2 Bombs! Eat 4 Chips to Win.\nType: !eat <1-9>\n\n{grid}")
+        send_text(room="", text=f"💣 MINES STARTED! @{user}\nGoal: Eat 4 Chips 🥔 | Avoid 2 Bombs 💣\nType: !eat <1-9>\n\n{grid}")
         return state
 
-    # 2. GAMEPLAY (Input)
-    elif msg.startswith("!eat"):
+    # --- B. GAMEPLAY LOGIC (!eat) ---
+    elif msg_clean.startswith("!eat"):
         if not state.get("active"): return state
         
         try:
-            num = int(msg.split()[1])
+            num = int(msg_clean.split()[1])
         except:
-            return state # Invalid Input
+            return state
 
         if num < 1 or num > 9 or num in state["eaten"]:
-            return state # Galat number ya already kha liya
+            return state
 
-        # Check Bomb
+        # BOMB CHECK
         if num in state["bombs"]:
-            state["active"] = False # Game Over
+            state["active"] = False # Session Close
             grid = render_grid(state["bombs"], state["eaten"], reveal=True, exploded=num)
-            send_func(f"💥 BOOM! @{user} hit a bomb!\n💀 GAME OVER.\n\n{grid}")
+            send_text(room="", text=f"💥 BOOM! @{user} hit a bomb at #{num}!\n💀 GAME OVER.\n\n{grid}")
+            add_log(f"Game Over: {user} hit a bomb.")
+            
         else:
+            # SAFE CHIP
             state["eaten"].append(num)
             
-            # Win Check (4 Chips)
+            # WIN CHECK (4 Chips)
             if len(state["eaten"]) == 4:
                 state["active"] = False
-                prize = 50 # 50 Points jeetne par
-                db_func(user, prize) # Neon DB mein save hoga
+                prize = 50
+                
+                # Database mein score save karo (Universal Tool)
+                db_set_score(user, prize)
                 
                 grid = render_grid(state["bombs"], state["eaten"], reveal=True)
-                send_func(f"🎉 WINNER! @{user} ate 4 chips!\n💰 +{prize} Points added to your Neon Vault!\n\n{grid}")
+                send_text(room="", text=f"🎉 WINNER! @{user} ate 4 chips!\n💰 +{prize} Points added to Neon DB!\n\n{grid}")
+                add_log(f"Victory: {user} won {prize} pts")
             else:
                 grid = render_grid(state["bombs"], state["eaten"])
-                send_func(f"🥔 SAFE! ({len(state['eaten'])}/4)\n{grid}")
+                send_text(room="", text=f"🥔 SAFE! ({len(state['eaten'])}/4)\n{grid}")
 
-    return state # Dabba wapas app.py ko de diya
+    return state
