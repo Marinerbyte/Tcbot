@@ -341,7 +341,7 @@ def status(): return jsonify({"connected": BOT_STATE["connected"], "sessions": l
 def bot_connect():
     d = request.json; BOT_STATE.update({"user": d['u'], "pass": d['p'], "room": d['r'], "reconnect": True})
     threading.Thread(target=connect_ws_loop, daemon=True).start(); return jsonify({"status": "ok"})
-@app.route('/disconnect', methods=['POST']):
+@app.route('/disconnect', methods=['POST'])
 def bot_disconnect():
     BOT_STATE["reconnect"] = False
     if BOT_STATE["ws"]: BOT_STATE["ws"].close(); return jsonify({"status": "ok"})
