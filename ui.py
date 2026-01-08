@@ -1,25 +1,26 @@
+HTML_DASHBOARD = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITAN v19.0 Control Center</title>
+    <title>TITAN ENGINE v19.0 - Command Center</title>
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --bg-panel: #1e293b;
-            --accent-primary: #3b82f6; /* Blue */
-            --accent-hover: #2563eb;
-            --accent-danger: #ef4444; /* Red */
-            --accent-success: #10b981; /* Green */
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
+            --bg-dark: #0b0f19;
+            --bg-panel: #151b2b;
+            --primary: #3b82f6;
+            --primary-dim: rgba(59, 130, 246, 0.1);
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --border: #1e293b;
             --font-mono: 'Courier New', Courier, monospace;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-dark);
@@ -31,348 +32,299 @@
         }
 
         /* HEADER */
-        header {
+        .header {
+            height: 60px;
             background: var(--bg-panel);
-            padding: 1rem 2rem;
             border-bottom: 1px solid var(--border);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 0 20px;
+            justify-content: space-between;
         }
+        .header h1 { font-size: 1.2rem; letter-spacing: 1px; color: var(--primary); text-transform: uppercase; }
+        .status-bar { display: flex; gap: 15px; font-size: 0.85rem; font-family: var(--font-mono); }
+        .indicator { padding: 4px 8px; border-radius: 4px; border: 1px solid transparent; }
+        .indicator.on { background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: var(--success); }
+        .indicator.off { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger); }
 
-        h1 { font-size: 1.5rem; letter-spacing: 1px; color: var(--accent-primary); text-transform: uppercase; }
-        .status-indicators { display: flex; gap: 15px; font-size: 0.9rem; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
-        .badge.on { background: rgba(16, 185, 129, 0.2); color: var(--accent-success); border: 1px solid var(--accent-success); }
-        .badge.off { background: rgba(239, 68, 68, 0.2); color: var(--accent-danger); border: 1px solid var(--accent-danger); }
-
-        /* MAIN GRID */
-        .dashboard-grid {
+        /* LAYOUT GRID */
+        .main-container {
+            flex: 1;
             display: grid;
-            grid-template-columns: 350px 1fr;
-            grid-template-rows: 1fr 300px; /* Top section, Terminal section */
-            gap: 1rem;
-            padding: 1rem;
-            height: calc(100vh - 70px);
+            grid-template-columns: 320px 1fr; /* Sidebar | Plugins */
+            grid-template-rows: 1fr 300px;    /* Top Area | Terminal */
+            gap: 10px;
+            padding: 10px;
+            height: calc(100vh - 60px);
         }
 
-        /* CARD STYLES */
-        .card {
+        /* PANELS */
+        .panel {
             background: var(--bg-panel);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.5rem;
+            border-radius: 6px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
-        .card-header { font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; font-weight: 600; color: var(--text-muted); }
+        .panel-header {
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
 
-        /* CONTROL PANEL (Left) */
-        .control-panel { grid-row: 1; grid-column: 1; }
+        /* LOGIN BOX (Top Left) */
+        .auth-box { grid-column: 1; grid-row: 1; padding: 15px; }
         
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
         input {
             width: 100%;
-            padding: 10px;
             background: var(--bg-dark);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            padding: 10px;
             color: var(--text-main);
+            border-radius: 4px;
             outline: none;
-            transition: border 0.2s;
+            transition: 0.2s;
         }
-        input:focus { border-color: var(--accent-primary); }
+        input:focus { border-color: var(--primary); }
+        .hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; }
 
-        .btn-group { display: flex; gap: 10px; margin-top: 1rem; }
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
         button {
             flex: 1;
             padding: 10px;
             border: none;
             border-radius: 4px;
-            cursor: pointer;
             font-weight: bold;
-            transition: opacity 0.2s;
+            cursor: pointer;
+            transition: 0.2s;
         }
-        .btn-login { background: var(--accent-primary); color: white; }
-        .btn-logout { background: var(--bg-dark); border: 1px solid var(--accent-danger); color: var(--accent-danger); }
-        button:hover { opacity: 0.9; }
-        button:active { transform: scale(0.98); }
+        .btn-connect { background: var(--primary); color: white; }
+        .btn-connect:hover { background: #2563eb; }
+        .btn-dc { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .btn-dc:hover { background: rgba(239, 68, 68, 0.1); }
 
-        /* PLUGINS LIST (Right) */
-        .plugins-panel { grid-row: 1; grid-column: 2; overflow-y: auto; }
+        /* PLUGINS (Top Right) */
+        .plugins-box { grid-column: 2; grid-row: 1; }
+        .plugins-content { padding: 15px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
         
-        .plugin-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-        .plugin-item {
+        .plugin-card {
             background: var(--bg-dark);
             border: 1px solid var(--border);
-            border-radius: 6px;
             padding: 10px;
+            border-radius: 4px;
             position: relative;
         }
-        .plugin-item.failed { border-left: 3px solid var(--accent-danger); }
-        .plugin-item.loaded { border-left: 3px solid var(--accent-success); }
+        .plugin-card.loaded { border-left: 3px solid var(--success); }
+        .plugin-card.failed { border-left: 3px solid var(--danger); }
         
-        .p-name { font-weight: bold; display: block; margin-bottom: 5px; }
-        .p-status { font-size: 0.8rem; display: flex; justify-content: space-between; }
-        .p-detail { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; display: block; word-break: break-all;}
+        .p-name { font-weight: bold; font-size: 0.9rem; }
+        .p-stat { font-size: 0.75rem; float: right; text-transform: uppercase; }
+        .p-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .p-err { color: var(--danger); font-size: 0.75rem; margin-top: 5px; }
 
-        /* TERMINAL (Bottom, Spans both cols) */
-        .terminal-panel { grid-row: 2; grid-column: 1 /span 2; display: flex; flex-direction: column; }
-        
-        .terminal-window {
+        /* TERMINAL (Bottom, Full Width) */
+        .terminal-box { grid-column: 1 / -1; grid-row: 2; }
+        .terminal {
             flex: 1;
             background: #000;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
             padding: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
             overflow-y: auto;
-            color: #d4d4d4;
+            color: #ccc;
         }
-
-        /* TERMINAL LOG COLORS */
-        .log-entry { margin-bottom: 4px; border-bottom: 1px solid #1a1a1a; padding-bottom: 2px; }
-        .log-time { color: #569cd6; margin-right: 10px; }
-        .log-info { color: #d4d4d4; }
-        .log-error { color: #f48771; font-weight: bold; }
-        .log-payload { color: #ce9178; display: block; margin-top: 2px; padding-left: 20px; white-space: pre-wrap; }
-        .tag { display: inline-block; padding: 0 4px; border-radius: 2px; margin-right: 5px; font-size: 0.75rem; }
-        .tag.sys { background: #264f78; color: #fff; }
-        .tag.bot { background: #6a9955; color: #fff; }
+        
+        .log-line { margin-bottom: 4px; border-bottom: 1px solid #111; padding-bottom: 2px; }
+        .ts { color: #555; margin-right: 10px; }
+        .type-sys { color: var(--primary); }
+        .type-err { color: var(--danger); font-weight: bold; }
+        .type-bot { color: var(--success); }
+        .payload {
+            display: block;
+            margin-left: 20px;
+            color: #d69e2e; /* Yellowish for JSON */
+            white-space: pre-wrap;
+            font-size: 0.75rem;
+        }
 
         /* SCROLLBAR */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-dark); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>TITAN ENGINE <span style="font-size: 0.5em; vertical-align: super;">v19.0</span></h1>
-        <div class="status-indicators" id="headerStatus">
-            <span>WS: <span id="ws-status" class="badge off">DISCONNECTED</span></span>
-            <span>DB: <span id="db-status" class="badge off">OFFLINE</span></span>
-            <span>Active Sessions: <b id="session-count" style="color:var(--accent-primary)">0</b></span>
+    <div class="header">
+        <h1>TITAN v19.0</h1>
+        <div class="status-bar">
+            <span id="ws-badge" class="indicator off">WS: DISCONNECTED</span>
+            <span id="db-badge" class="indicator off">DB: OFFLINE</span>
+            <span>Sessions: <b id="sess-count" style="color:white">0</b></span>
         </div>
-    </header>
+    </div>
 
-    <div class="dashboard-grid">
+    <div class="main-container">
         
-        <!-- LOGIN / CONTROLS -->
-        <div class="card control-panel">
-            <div class="card-header">Bot Configuration</div>
+        <!-- LOGIN PANEL -->
+        <div class="panel auth-box">
+            <div class="panel-header" style="margin: -15px -15px 15px -15px;">AUTHENTICATION</div>
             
-            <div class="form-group">
-                <label for="botId">Bot ID / Username</label>
-                <input type="text" id="botId" placeholder="Enter Bot ID">
+            <div class="input-group">
+                <label>USER ID</label>
+                <input type="text" id="uid" placeholder="Enter Bot ID">
             </div>
 
-            <div class="form-group">
-                <label for="botPass">Password</label>
-                <input type="password" id="botPass" placeholder="••••••••">
+            <div class="input-group">
+                <label>PASSWORD</label>
+                <input type="password" id="upass" placeholder="••••••••">
             </div>
 
-            <div class="form-group">
-                <label for="botRooms">Target Rooms</label>
-                <input type="text" id="botRooms" placeholder="room1, room2, room3">
-                <small style="color:var(--text-muted); font-size: 0.75rem;">Separate multiple rooms with commas</small>
+            <div class="input-group">
+                <label>TARGET ROOMS</label>
+                <input type="text" id="urooms" placeholder="room1, room2">
+                <div class="hint">Comma separated (e.g. Chat1, MusicRoom)</div>
             </div>
 
-            <div class="btn-group">
-                <button class="btn-login" onclick="connectBot()">Connect Engine</button>
-                <button class="btn-logout" onclick="disconnectBot()">Terminate</button>
+            <div class="btn-row">
+                <button class="btn-connect" onclick="connectBot()">LOGIN</button>
+                <button class="btn-dc" onclick="disconnectBot()">LOGOUT</button>
             </div>
         </div>
 
-        <!-- PLUGINS MONITOR -->
-        <div class="card plugins-panel">
-            <div class="card-header">
-                Plugin Registry 
-                <span style="float:right; font-size:0.8rem">
-                    Loaded: <span id="pl-loaded" style="color:var(--accent-success)">0</span> | 
-                    Failed: <span id="pl-failed" style="color:var(--accent-danger)">0</span>
+        <!-- PLUGINS PANEL -->
+        <div class="panel plugins-box">
+            <div class="panel-header">
+                ACTIVE PLUGINS
+                <span style="font-size:0.75rem">
+                    OK: <span id="cnt-ok" style="color:var(--success)">0</span> | 
+                    FAIL: <span id="cnt-fail" style="color:var(--danger)">0</span>
                 </span>
             </div>
-            <div id="plugin-container" class="plugin-list">
-                <div style="color: var(--text-muted); padding: 10px;">Waiting for connection...</div>
+            <div id="plugin-list" class="plugins-content">
+                <div style="color:var(--text-muted)">Waiting for engine...</div>
             </div>
         </div>
 
         <!-- DEBUG TERMINAL -->
-        <div class="card terminal-panel">
-            <div class="card-header">
-                Payload Debug Terminal
-                <button onclick="clearLogs()" style="float:right; background:transparent; border:1px solid var(--border); color:var(--text-muted); padding:2px 8px; font-size:0.7rem;">Clear Logs</button>
+        <div class="panel terminal-box">
+            <div class="panel-header">
+                PAYLOAD DEBUG TERMINAL
+                <button onclick="document.getElementById('term').innerHTML=''" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">Clear</button>
             </div>
-            <div id="terminal" class="terminal-window">
-                <div class="log-entry"><span class="log-time">[SYSTEM]</span> Ready to initialize Titan v19.0...</div>
-            </div>
+            <div id="term" class="terminal"></div>
         </div>
+
     </div>
 
 <script>
-    // --- MOCK DATA GENERATOR (Only for UI Demo) ---
-    // In real use, fetch this from your '/status' endpoint
-    
-    function logToTerminal(type, msg, payload = null) {
-        const term = document.getElementById('terminal');
-        const time = new Date().toLocaleTimeString('en-US', {hour12: false});
+    // UTILS
+    function log(type, msg, payload=null) {
+        const term = document.getElementById('term');
+        const ts = new Date().toLocaleTimeString('en-GB');
+        let html = `<div class="log-line"><span class="ts">[${ts}]</span>`;
         
-        let colorClass = 'log-info';
-        let tagHtml = '<span class="tag sys">SYS</span>';
+        if(type==='error') html += `<span class="type-err">ERR:</span> ${msg}`;
+        else if(type==='bot') html += `<span class="type-bot">BOT:</span> ${msg}`;
+        else html += `<span class="type-sys">SYS:</span> ${msg}`;
 
-        if(type === 'error') {
-            colorClass = 'log-error';
-            tagHtml = '<span class="tag" style="background:#8b0000">ERR</span>';
-        } else if (type === 'bot') {
-            tagHtml = '<span class="tag bot">BOT</span>';
+        if(payload) {
+            html += `<span class="payload">${typeof payload === 'object' ? JSON.stringify(payload, null, 2) : payload}</span>`;
         }
-
-        let html = `
-            <div class="log-entry">
-                <span class="log-time">[${time}]</span>
-                ${tagHtml}
-                <span class="${colorClass}">${msg}</span>
-        `;
-
-        if (payload) {
-            // Pretty print JSON
-            const prettyPayload = JSON.stringify(payload, null, 2);
-            html += `<span class="log-payload">${prettyPayload}</span>`;
-        }
-
+        
         html += `</div>`;
-        
         term.innerHTML += html;
-        term.scrollTop = term.scrollHeight; // Auto scroll
+        term.scrollTop = term.scrollHeight;
     }
 
-    function clearLogs() {
-        document.getElementById('terminal').innerHTML = '';
-    }
-
-    function renderPlugins(plugins) {
-        const container = document.getElementById('plugin-container');
-        container.innerHTML = '';
-        
-        let loadedCount = 0;
-        let failedCount = 0;
-
-        plugins.forEach(p => {
-            if(p.status === 'ok') loadedCount++; else failedCount++;
-            
-            const item = document.createElement('div');
-            item.className = `plugin-item ${p.status === 'ok' ? 'loaded' : 'failed'}`;
-            item.innerHTML = `
-                <span class="p-name">${p.name}</span>
-                <div class="p-status">
-                    <span>${p.status === 'ok' ? 'Active' : 'Failed'}</span>
-                    <span style="opacity:0.7">${p.ver}</span>
-                </div>
-                ${p.error ? `<span class="p-detail" style="color:#f48771">Err: ${p.error}</span>` : `<span class="p-detail">${p.desc}</span>`}
-            `;
-            container.appendChild(item);
-        });
-
-        document.getElementById('pl-loaded').innerText = loadedCount;
-        document.getElementById('pl-failed').innerText = failedCount;
-    }
-
-    // --- MAIN LOGIC ---
-
+    // API CALLS
     async function updateStatus() {
         try {
             const res = await fetch('/status');
             const data = await res.json();
             
-            // Update Headers
-            const wsBadge = document.getElementById('ws-status');
-            wsBadge.className = data.connected ? 'badge on' : 'badge off';
-            wsBadge.innerText = data.connected ? 'CONNECTED' : 'DISCONNECTED';
+            // Header Stats
+            const ws = document.getElementById('ws-badge');
+            ws.className = `indicator ${data.connected ? 'on' : 'off'}`;
+            ws.innerText = data.connected ? 'WS: CONNECTED' : 'WS: DISCONNECTED';
+            
+            const db = document.getElementById('db-badge');
+            db.className = `indicator ${data.db_ok ? 'on' : 'off'}`;
+            db.innerText = data.db_ok ? 'DB: ONLINE' : 'DB: OFFLINE';
 
-            const dbBadge = document.getElementById('db-status');
-            dbBadge.className = data.db_ok ? 'badge on' : 'badge off';
-            dbBadge.innerText = data.db_ok ? 'ONLINE' : 'OFFLINE';
+            document.getElementById('sess-count').innerText = data.sessions || 0;
 
-            document.getElementById('session-count').innerText = data.sessions;
+            // Plugins Logic
+            if(data.plugins_list) renderPlugins(data.plugins_list);
 
-            // Render Plugins (Assuming data.plugins_list exists in response)
-            if(data.plugins_list) {
-                renderPlugins(data.plugins_list);
-            }
-
-            // Handle Logs
-            if(data.logs && data.logs.length > 0) {
-                // Clear old logs in UI if needed, or append new ones. 
-                // For this demo, let's assume logs come as a fresh stream
-                data.logs.forEach(l => {
-                    logToTerminal(l.type, l.msg, l.payload);
-                });
+            // Logs Logic
+            if(data.logs && data.logs.length) {
+                data.logs.forEach(l => log(l.type, l.msg, l.payload));
             }
 
         } catch (e) {
-            // Silent catch for UI demo so it doesn't crash if backend is missing
-            // console.log("Backend not connected");
+            // console.error("Poll failed");
         }
+    }
+
+    function renderPlugins(list) {
+        const container = document.getElementById('plugin-list');
+        container.innerHTML = '';
+        let ok = 0, fail = 0;
+
+        list.forEach(p => {
+            if(p.status === 'ok') ok++; else fail++;
+            const isErr = p.status !== 'ok';
+            
+            const div = document.createElement('div');
+            div.className = `plugin-card ${isErr ? 'failed' : 'loaded'}`;
+            div.innerHTML = `
+                <div class="p-name">${p.name} <span class="p-stat" style="color:${isErr ? 'var(--danger)' : 'var(--success)'}">${p.status}</span></div>
+                ${isErr ? `<div class="p-err">${p.error}</div>` : `<div class="p-desc">${p.desc || 'Loaded successfully'}</div>`}
+            `;
+            container.appendChild(div);
+        });
+
+        document.getElementById('cnt-ok').innerText = ok;
+        document.getElementById('cnt-fail').innerText = fail;
     }
 
     async function connectBot() {
-        const u = document.getElementById('botId').value;
-        const p = document.getElementById('botPass').value;
-        const r = document.getElementById('botRooms').value;
+        const u = document.getElementById('uid').value;
+        const p = document.getElementById('upass').value;
+        const r = document.getElementById('urooms').value;
 
-        if(!u || !p || !r) {
-            logToTerminal('error', 'Validation Failed: Missing ID, Password, or Rooms');
-            return;
-        }
+        if(!u || !p) return log('error', 'Username and Password required');
 
-        // Show loading in terminal
-        logToTerminal('bot', `Initiating connection for user: ${u}`);
-        logToTerminal('bot', `Targeting rooms: [${r}]`);
-
+        log('sys', 'Sending Login Request...');
         try {
             await fetch('/connect', {
-                method:'POST', 
-                headers:{'Content-Type':'application/json'}, 
-                body:JSON.stringify({u, p, r})
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ u, p, r })
             });
-            logToTerminal('sys', 'Connection request sent to Engine.');
-        } catch(e) {
-            logToTerminal('error', 'Network Error: Could not reach backend.');
-        }
+        } catch(e) { log('error', 'Fetch failed'); }
     }
 
     async function disconnectBot() {
-        logToTerminal('sys', 'Sending terminate signal...');
-        try {
-            await fetch('/disconnect', {method:'POST'});
-        } catch(e) {}
+        log('sys', 'Disconnecting...');
+        await fetch('/disconnect', {method:'POST'});
     }
 
-    // --- DEMO SIMULATION (REMOVE THIS IN PRODUCTION) ---
-    // This part simulates what happens when you click buttons so you can see the UI effects
-    // without the Python backend running.
-    setTimeout(() => {
-        // Simulate loading plugins
-        renderPlugins([
-            {name: 'Auth Module', ver: 'v1.0', status: 'ok', desc: 'Authentication handler loaded'},
-            {name: 'Chat Logger', ver: 'v2.1', status: 'ok', desc: 'Writing to DB...'},
-            {name: 'Auto-Mod', ver: 'v0.9', status: 'err', error: 'Config file missing exception'},
-            {name: 'Welcome Bot', ver: 'v1.1', status: 'ok', desc: 'Greeting enabled'}
-        ]);
-        
-        // Simulate a log entry
-        logToTerminal('sys', 'System initialized. Waiting for user input.');
-    }, 1000);
-
+    // Start Polling
     setInterval(updateStatus, 2000);
+    updateStatus();
+    log('sys', 'Titan Dashboard v19.0 Initialized.');
 
 </script>
 </body>
 </html>
+"""
