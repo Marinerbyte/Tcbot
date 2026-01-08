@@ -1,7 +1,7 @@
 Flask==3.0.3
-psycopg2-binary==2.9.9
-websocket-client==1.8.0
-python-dotenv==1.0.1
 gunicorn==22.0.0
+python-dotenv==1.0.1
 requests==2.32.3
-Pillow==10.4.0  # Stable version
+websocket-client==1.8.0
+pg8000==1.32.2
+Pillow==10.4.0
