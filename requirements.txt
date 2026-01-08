@@ -5,3 +5,4 @@ requests
 websocket-client==1.8.0
 Pillow==10.4.0
 psycopg2
+requests_toolbelt
