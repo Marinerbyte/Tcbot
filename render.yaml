@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: titan-bot
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: NEON_URL
+        sync: false  # Set manually in Render dashboard
+    plan: free
