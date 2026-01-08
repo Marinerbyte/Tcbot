@@ -1,5 +1,6 @@
-flask
-websocket-client
-psycopg2-binary
-requests
-gunicorn
+Flask==3.0.3
+psycopg2-binary==2.9.9
+websocket-client==1.8.0
+python-dotenv==1.0.1
+gunicorn==22.0.0
+requests==2.32.3
